@@ -34,7 +34,7 @@ import (
 )
 
 const (
-	maxRunTime = 2 * time.Second
+	maxRunTime = 100 * time.Second
 
 	// progName is the implicit program name written to the temp
 	// dir and used in compiler and vet errors.
@@ -310,7 +310,6 @@ func compileAndRun(req *request) (*response, error) {
 		return nil, fmt.Errorf("error creating temp directory: %v", err)
 	}
 	defer os.RemoveAll(tmpDir)
-
 	files, err := splitFiles([]byte(req.Body))
 	if err != nil {
 		return &response{Errors: err.Error()}, nil
@@ -361,7 +360,7 @@ func compileAndRun(req *request) (*response, error) {
 	cmd := exec.Command("go", "build", "-o", exe, buildPkgArg)
 	cmd.Dir = tmpDir
 	var goPath string
-	cmd.Env = []string{"GOOS=nacl", "GOARCH=amd64p32", "GOCACHE=" + goCache}
+	cmd.Env = []string{"GOOS=linux", "GOARCH=amd64", "GOCACHE=" + goCache}
 	if useModules {
 		// Create a GOPATH just for modules to be downloaded
 		// into GOPATH/pkg/mod.
@@ -393,7 +392,7 @@ func compileAndRun(req *request) (*response, error) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), maxRunTime)
 	defer cancel()
-	cmd = exec.CommandContext(ctx, "sel_ldr_x86_64", "-l", "/dev/null", "-S", "-e", exe, testParam)
+	cmd = exec.CommandContext(ctx, exe)
 	rec := new(Recorder)
 	cmd.Stdout = rec.Stdout()
 	cmd.Stderr = rec.Stderr()

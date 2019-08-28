@@ -6,7 +6,7 @@ FROM debian:stretch AS nacl
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl bzip2 ca-certificates
 
-RUN curl -s https://storage.googleapis.com/nativeclient-mirror/nacl/nacl_sdk/trunk.544461/naclsdk_linux.tar.bz2 | tar -xj -C /tmp --strip-components=2 pepper_67/tools/sel_ldr_x86_64
+# RUN curl -s https://storage.googleapis.com/nativeclient-mirror/nacl/nacl_sdk/trunk.544461/naclsdk_linux.tar.bz2 | tar -xj -C /tmp --strip-components=2 pepper_67/tools/sel_ldr_x86_64
 
 FROM debian:stretch AS build
 LABEL maintainer="golang-dev@googlegroups.com"
@@ -22,9 +22,9 @@ ARG GO_VERSION=go1.12.6
 ENV GO_VERSION ${GO_VERSION}
 
 # Fake time
-COPY enable-fake-time.patch /usr/local/playground/
+# COPY enable-fake-time.patch /usr/local/playground/
 # Fake file system
-COPY fake_fs.lst /usr/local/playground/
+# COPY fake_fs.lst /usr/local/playground/
 
 # Get a bootstrap version of Go for building from source.
 RUN curl -sSL https://dl.google.com/go/$GO_BOOTSTRAP_VERSION.linux-amd64.tar.gz -o /tmp/go.tar.gz
@@ -36,10 +36,10 @@ RUN tar --strip=1 -C $GOROOT_BOOTSTRAP -vxzf /tmp/go.tar.gz
 # Fetch Go source for tag $GO_VERSION.
 RUN git clone --depth=1 --branch=$GO_VERSION https://go.googlesource.com/go /usr/local/go
 # Apply the fake time and fake filesystem patches.
-RUN patch /usr/local/go/src/runtime/rt0_nacl_amd64p32.s /usr/local/playground/enable-fake-time.patch
-RUN cd /usr/local/go && $GOROOT_BOOTSTRAP/bin/go run misc/nacl/mkzip.go -p syscall /usr/local/playground/fake_fs.lst src/syscall/fstest_nacl.go
+# RUN patch /usr/local/go/src/runtime/rt0_nacl_amd64p32.s /usr/local/playground/enable-fake-time.patch
+# RUN cd /usr/local/go && $GOROOT_BOOTSTRAP/bin/go run misc/nacl/mkzip.go -p syscall /usr/local/playground/fake_fs.lst src/syscall/fstest_nacl.go
 # Build the Go toolchain.
-RUN cd /usr/local/go/src && GOOS=nacl GOARCH=amd64p32 ./make.bash --no-clean
+RUN cd /usr/local/go/src && GOOS=linux GOARCH=amd64 ./make.bash --no-clean
 
 RUN mkdir /gocache
 ENV GOCACHE /gocache
@@ -69,13 +69,13 @@ FROM debian:stretch
 RUN apt-get update && apt-get install -y git ca-certificates --no-install-recommends
 
 COPY --from=build /usr/local/go /usr/local/go
-COPY --from=nacl /tmp/sel_ldr_x86_64 /usr/local/bin
+# COPY --from=nacl /tmp/sel_ldr_x86_64 /usr/local/bin
 
 ENV GOPATH /go
 ENV PATH /usr/local/go/bin:$GOPATH/bin:$PATH
 
 # Add and compile tour packages
-RUN GOOS=nacl GOARCH=amd64p32 go get \
+RUN GOOS=linux GOARCH=amd64 go get \
     golang.org/x/tour/pic \
     golang.org/x/tour/reader \
     golang.org/x/tour/tree \
@@ -102,7 +102,7 @@ COPY static /app/static
 WORKDIR /app
 
 # Run tests
-RUN /app/playground test
+# RUN /app/playground test
 
 # Whether we allow third-party imports via proxy.golang.org:
 ENV ALLOW_PLAY_MODULE_DOWNLOADS true
