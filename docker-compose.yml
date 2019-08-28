@@ -1,0 +1,12 @@
+version: '3'
+services:
+  playground:
+    image: tonywangcn/playground:dev
+    container_name: playground
+    environment:
+      https_proxy: host.docker.internal:6152
+      http_proxy: host.docker.internal:6152
+    ports:
+      - 8010:8080
+    # command: ["tail", "-f", "/dev/null"]
+    restart: on-failure:5
